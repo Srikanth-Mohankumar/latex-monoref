@@ -1,0 +1,21 @@
+% monoref -- "Page X of Y" footer in a single pass, using \lastpage
+% together with fancyhdr. Compile ONCE:  lualatex 05-page-of-total.tex
+\documentclass{article}
+\usepackage{lipsum}
+\usepackage{fancyhdr}
+\usepackage{monoref}
+\pagestyle{fancy}
+\fancyhf{}
+\cfoot{Page \thepage\ of \lastpage}
+\renewcommand\headrulewidth{0pt}
+\begin{document}
+
+\section{Chapter one}\label{sec:one}
+Every footer reads ``Page X of \lastpage'' with the correct total,
+resolved in one compilation. See Section~\ref{sec:two}.
+\lipsum[1-8]
+
+\section{Chapter two}\label{sec:two}
+\lipsum[1-8]
+
+\end{document}

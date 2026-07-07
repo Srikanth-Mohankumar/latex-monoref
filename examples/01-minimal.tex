@@ -1,0 +1,15 @@
+% monoref -- minimal example
+% Compile once with LuaLaTeX:  lualatex 01-minimal.tex
+\documentclass{article}
+\usepackage{monoref}
+\begin{document}
+
+\section{First}\label{sec:first}
+This document has \lastpage\ page(s) in total.
+The next part is Section~\ref{sec:second} on page~\pageref{sec:second}
+(resolved forward, in one pass).
+
+\section{Second}\label{sec:second}
+Back to Section~\ref{sec:first} on page~\pageref{sec:first}.
+
+\end{document}

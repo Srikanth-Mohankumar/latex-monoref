@@ -1,0 +1,34 @@
+% monoref -- tuning the reserved slot widths.
+%
+% Forward values reserve a font-relative width from a template; at flush
+% the slot collapses to the value's natural width and the line is
+% re-justified, so short values never leave a gap. The template only has
+% to be wide enough to guide the FIRST line break; make it as wide as the
+% widest forward value you expect.
+%
+% Here a document with many pages (wide page numbers) and deep section
+% numbers widens both templates. \monorefslotwidth would override both
+% with a single fixed length instead.
+% Compile ONCE with LuaLaTeX:  lualatex 06-custom-slot-width.tex
+\documentclass{article}
+\usepackage{lipsum}
+\usepackage{monoref}
+
+\renewcommand\monorefreftemplate{0.0.0}  % up to subsubsection numbers
+\renewcommand\monorefpagetemplate{0000}  % up to four-digit pages
+% Alternatively: \setlength\monorefslotwidth{3em}
+
+\begin{document}
+
+\section{Introduction}\label{sec:intro}
+Forward reference to the deep dive in Section~\ref{ssub:deep} on
+page~\pageref{ssub:deep}. Total pages: \lastpage.
+\lipsum[1-3]
+
+\section{Body}\label{sec:body}
+\subsection{Part}\label{sub:part}
+\subsubsection{Deep dive}\label{ssub:deep}
+This is Section~\ref{ssub:deep}.
+\lipsum[1-2]
+
+\end{document}

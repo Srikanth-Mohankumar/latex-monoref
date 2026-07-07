@@ -1,0 +1,18 @@
+% monoref -- suppress the auto-generated contents page with [notoc].
+% Compile ONCE with LuaLaTeX:  lualatex 04-notoc.tex
+\documentclass{article}
+\usepackage{lipsum}
+\usepackage[notoc]{monoref}
+\begin{document}
+
+\section{Only the body}\label{sec:a}
+No contents page is prepended. Forward reference to
+Section~\ref{sec:b} on page~\pageref{sec:b} still works, and this
+document is \lastpage\ pages long.
+\lipsum[1-6]
+
+\section{Second}\label{sec:b}
+Backward reference to Section~\ref{sec:a} on page~\pageref{sec:a}.
+\lipsum[1-2]
+
+\end{document}

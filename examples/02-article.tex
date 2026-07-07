@@ -1,0 +1,40 @@
+% monoref -- a fuller article: three heading levels, an equation,
+% forward and backward \ref/\pageref, a page total, and a front TOC.
+% Compile ONCE with LuaLaTeX:  lualatex 02-article.tex
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{lipsum}
+\usepackage{monoref}
+\begin{document}
+
+\section{Introduction}\label{sec:intro}
+The results are in Section~\ref{sec:results} on page~\pageref{sec:results},
+and the key identity is Equation~\ref{eq:key} (both forward).
+This report is \lastpage\ pages long.
+\lipsum[1-2]
+
+\subsection{Scope}\label{sub:scope}
+See the deep dive in Section~\ref{ssub:deep} on page~\pageref{ssub:deep}.
+\lipsum[1-2]
+
+\section{Method}\label{sec:method}
+As introduced in Section~\ref{sec:intro} (backward) on
+page~\pageref{sec:intro}.
+\begin{equation}\label{eq:key}
+  e^{i\pi} + 1 = 0 .
+\end{equation}
+\lipsum[1-3]
+
+\subsection{Details}\label{sub:details}
+\lipsum[1]
+
+\subsubsection{Deep dive}\label{ssub:deep}
+This is Section~\ref{ssub:deep} on page~\pageref{ssub:deep};
+it refers back to Equation~\ref{eq:key}.
+\lipsum[1-2]
+
+\section{Results}\label{sec:results}
+Recall Sections~\ref{sec:intro}, \ref{sec:method}, and~\ref{ssub:deep}.
+\lipsum[1]
+
+\end{document}

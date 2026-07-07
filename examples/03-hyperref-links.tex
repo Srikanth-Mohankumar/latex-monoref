@@ -1,0 +1,24 @@
+% monoref -- clickable links via hyperref.
+% IMPORTANT: load monoref AFTER hyperref.
+% [hidelinks] removes the coloured boxes around links.
+% Compile ONCE with LuaLaTeX:  lualatex 03-hyperref-links.tex
+\documentclass{article}
+\usepackage{lipsum}
+\usepackage[hidelinks]{hyperref}
+\usepackage{monoref}
+\begin{document}
+
+\section{Introduction}\label{sec:intro}
+Jump to Section~\ref{sec:results} on page~\pageref{sec:results} -- the
+number and the page are live hyperlinks, resolved in a single pass.
+The table of contents entries are clickable too.
+\lipsum[1-3]
+
+\subsection{Background}\label{sub:bg}
+\lipsum[1-3]
+
+\section{Results}\label{sec:results}
+Back to Section~\ref{sec:intro} on page~\pageref{sec:intro}.
+\lipsum[1-2]
+
+\end{document}

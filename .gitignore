@@ -1,0 +1,17 @@
+tests/test*
+test/authpack-test-suite.tex
+*.log
+*.aux
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.bbl
+*.blg
+*.run.xml
+*.bcf
+*.pdf
+*.nav
+*.snm
+*.vrb

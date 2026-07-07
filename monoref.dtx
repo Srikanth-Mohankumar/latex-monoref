@@ -1,0 +1,548 @@
+% \iffalse meta-comment
+%
+% monoref.dtx
+% Single-pass cross-references, page totals and a table of contents in
+% one LuaLaTeX run -- no rerun, no latexmk, no .aux round-trip.
+%
+% Copyright (C) 2025 Srikanth Mohankumar <srikanthmohankumar@gmail.com>
+%
+% This work may be distributed and/or modified under the conditions of
+% the LaTeX Project Public License, either version 1.3c of this license
+% or (at your option) any later version.  The latest version of this
+% license is in http://www.latex-project.org/lppl.txt and version 1.3c
+% or later is part of all distributions of LaTeX version 2008 or later.
+%
+% This work has the LPPL maintenance status `maintained'.
+% The Current Maintainer of this work is Srikanth Mohankumar.
+%
+% This work consists of the files monoref.dtx and
+% monoref.ins and the derived files monoref.sty and
+% monoref.lua.
+%
+% \fi
+%
+% \iffalse
+%<*driver>
+\documentclass{ltxdoc}
+\providecommand\LuaLaTeX{Lua\LaTeX}
+\EnableCrossrefs
+\CodelineIndex
+\RecordChanges
+\begin{document}
+  \DocInput{monoref.dtx}
+  \PrintChanges
+  \PrintIndex
+\end{document}
+%</driver>
+% \fi
+%
+% \CheckSum{0}
+%
+% \title{The \textsf{monoref} package\thanks{This document
+%   corresponds to \textsf{monoref}~v1.3, dated 2025/07/07.}}
+% \author{Srikanth Mohankumar \\ \texttt{srikanthmohankumar@gmail.com}}
+% \date{2025/07/07}
+% \maketitle
+%
+% \begin{abstract}
+%   \textsf{monoref} resolves forward cross-references, page
+%   references, the total page count and a multi-level table of
+%   contents in a \emph{single} \LuaLaTeX{} run.  No second pass, no
+%   \texttt{latexmk}, and no \texttt{.aux} round-trip are required.  It
+%   holds every finished page in memory and back-patches the still
+%   unknown values at |\end{document}|.  When \textsf{hyperref} is
+%   loaded, the references and contents entries become clickable.
+% \end{abstract}
+%
+% \section{Introduction}
+%
+% Normally \LaTeX{} needs at least two runs to settle cross-references:
+% the first writes label values, section numbers and page numbers to the
+% \texttt{.aux} file and the second reads them back.  This package
+% removes that round-trip for a useful subset of the problem by never
+% shipping a page out immediately.  Every page is \emph{held} in memory
+% (using the \texttt{shipout/before} hook and |\DiscardShipoutBox|); at
+% the end of the document all values are known, so they can be patched
+% into the held pages before the pages are finally shipped.
+%
+% Two ideas make it work.
+% \begin{description}
+%   \item[Reserved slots.]  A value that is not yet known (a forward
+%     |\ref|, any |\pageref|, |\lastpage|) is typeset as a reserved
+%     box.  At flush the box collapses to the value's natural width and
+%     the enclosing line is re-justified to its original width, so the
+%     interword glue absorbs any freed space: short values (a single
+%     digit) leave no gap.  The reserved width therefore only guides the
+%     original line break, not the final spacing.
+%   \item[Shipout-accurate pages.]  |\label| drops an invisible
+%     |\special| marker; when a page is held it is scanned for markers
+%     and each label is stamped with the page it really landed on.  This
+%     avoids the off-by-one you get from reading |\value{page}| at
+%     |\label| time, because \TeX{}'s page builder is asynchronous.
+% \end{description}
+%
+% \section{Requirements}
+%
+% \textsf{monoref} requires \LuaLaTeX{}.  It stops with an error
+% on any other engine.
+%
+% \section{Usage}
+%
+% \begin{verbatim}
+%   \documentclass{article}
+%   \usepackage{hyperref}        % optional; enables clickable links
+%   \usepackage{monoref} % load AFTER hyperref
+%   \begin{document}
+%   \section{Introduction}\label{sec:intro}
+%   See Section~\ref{sec:results} on page~\pageref{sec:results}.
+%   This document has \lastpage\ body pages.
+%   ...
+%   \section{Results}\label{sec:results}
+%   ...
+%   \end{document}
+% \end{verbatim}
+%
+% \DescribeMacro{\ref}
+% Prints the number of the referenced |\label|.  A backward reference is
+% typeset immediately; a forward reference is emitted as a slot and
+% filled at the end.
+%
+% \DescribeMacro{\pageref}
+% Prints the page of the referenced |\label|.  It is always a slot,
+% because a label's true page is known only once its page is assembled.
+%
+% \DescribeMacro{\lastpage}
+% Prints the total number of body pages (front matter excluded).
+%
+% \section{Slot width}
+%
+% Forward values are reserved with a font-relative width taken from a
+% template string.  This width only guides the original line break; at
+% flush the slot collapses to the value's natural width and the line is
+% re-justified, so the reserved width never shows up as a gap.
+% \DescribeMacro{\monorefreftemplate}
+% \DescribeMacro{\monorefpagetemplate}
+% |\monorefreftemplate| (default |0.0.0|) sizes |\ref| slots; it must be at
+% least as wide as the widest forward (sub)section number.
+% |\monorefpagetemplate| (default |000|) sizes |\pageref| and |\lastpage|
+% slots.  Redefine either with |\renewcommand|, e.g.
+% |\renewcommand\monorefreftemplate{0.0}| for a document with no forward
+% subsubsection references.
+% \DescribeMacro{\monorefslotwidth}
+% Setting the length |\monorefslotwidth| to a positive value overrides both
+% templates with a fixed width.
+%
+% \section{Hyperlinks}
+%
+% If \textsf{hyperref} is loaded, |\ref|, |\pageref| and the contents
+% entries become clickable.  The links use the package's own named
+% destinations (derived directly from the label names), \emph{not}
+% \textsf{hyperref}'s \texttt{.aux}-based anchors, so linking stays
+% single-pass and works for forward references too.  Load
+% \textsf{monoref} \emph{after} \textsf{hyperref}.
+%
+% \section{The table of contents}
+%
+% Without the |notoc| option a contents list covering |\section|,
+% |\subsection| and |\subsubsection| is collected during the run and
+% prepended at the end with roman folios, while the body keeps arabic
+% numbering; prepending the contents therefore does not renumber the
+% body and there is no circular dependency.  Use |notoc| to switch it
+% off.
+%
+% \section{Limitations}
+%
+% \begin{itemize}
+%   \item It holds the whole document in memory until |\end{document}|.
+%   \item It redefines |\label|, |\ref|, |\pageref|, |\section|,
+%     |\subsection| and |\subsubsection|; because it replaces
+%     \textsf{hyperref}'s versions of these, \textsf{hyperref} features
+%     that depend on them (|\autoref|, |\nameref|, \textsf{cleveref})
+%     are not available.  It also conflicts with \textsf{titlesec} and
+%     \textsf{varioref}.
+%   \item A forward value wider than its slot template overflows.
+%   \item Numbered-equation |\ref| works, including with \textsf{amsmath};
+%     but |\eqref| (the parenthesised form) and lists of figures/tables
+%     are not provided.
+%   \item Because it intercepts every |\shipout|, it is incompatible
+%     with other packages that manipulate shipout.
+% \end{itemize}
+%
+% \section{Examples}
+%
+% The distribution ships a set of runnable examples in the
+% \texttt{examples/} directory; compile each once with \LuaLaTeX{}:
+% \begin{description}
+%   \item[01-minimal] the smallest possible use.
+%   \item[02-article] three heading levels, a numbered equation, forward
+%     and backward |\ref|/|\pageref|, a page total, and a front TOC.
+%   \item[03-hyperref-links] clickable links via \textsf{hyperref}
+%     (loaded first, with \texttt{hidelinks}).
+%   \item[04-notoc] the |notoc| option.
+%   \item[05-page-of-total] a ``Page X of Y'' footer with \textsf{fancyhdr}
+%     and |\lastpage|.
+%   \item[06-custom-slot-width] widening the slot templates.
+% \end{description}
+%
+% \StopEventually{}
+%
+% \section{Implementation: the style file}
+%
+% \changes{v1.0}{2025/07/07}{Initial release}
+% \changes{v1.1}{2025/07/07}{Flush-left, font-relative slots; optional
+%   hyperref links; three-level clickable TOC}
+% \changes{v1.2}{2025/07/07}{Slots collapse to natural width at flush and
+%   the line is re-justified, so short values leave no gap}
+% \changes{v1.3}{2025/07/07}{Renamed to \textsf{monoref}; support
+%   \textsf{amsmath} numbered-equation labels; patch slots on the
+%   contents page; broad set of examples}
+%
+%    \begin{macrocode}
+%<*package>
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{monoref}%
+  [2025/07/07 v1.3 Single-pass cross-references, page totals and TOC (LuaLaTeX)]
+
+\RequirePackage{iftex}
+\RequireLuaTeX
+\RequirePackage{xparse}
+
+\newif\ifmonoref@dotoc \monoref@dotoctrue
+\DeclareOption{notoc}{\monoref@dotocfalse}
+\ProcessOptions\relax
+
+\directlua{if not pcall(require, "monoref") then
+             dofile("monoref.lua") end}
+
+\newbox\monoref@shipbox
+\directlua{monoref.shipreg = \number\monoref@shipbox}
+\attributedef\monoref@slotattr=\directlua{tex.print(monoref.slotattr)}\relax
+\attributedef\monoref@markattr=\directlua{tex.print(monoref.markattr)}\relax
+
+\newcommand\monorefreftemplate{0.0.0}
+\newcommand\monorefpagetemplate{000}
+\newlength\monorefslotwidth \setlength\monorefslotwidth{0pt}
+\newlength\monoref@tmpwd
+
+\newcommand\monoref@slot[2]{%   #1 = slot id   #2 = width template
+  \begingroup
+    \ifdim\monorefslotwidth>\z@ \monoref@tmpwd=\monorefslotwidth
+    \else \settowidth\monoref@tmpwd{#2}\fi
+    \monoref@slotattr=#1\relax \hbox to \monoref@tmpwd{\hfil}%
+  \endgroup}
+
+\newcommand\monoref@mark[1]{{\monoref@markattr=#1\relax \special{}}}
+
+\newif\ifmonoref@hyper \monoref@hyperfalse
+\newcommand\monoref@target[1]{\ifmonoref@hyper\hypertarget{monoref:#1}{}\fi}
+\newcommand\monoref@link[2]{\ifmonoref@hyper\hyperlink{monoref:#1}{#2}\else#2\fi}
+
+\newcommand\lastpage{\monoref@slot{\directlua{monoref.newslot("","total")}}{\monorefpagetemplate}}
+
+\newcommand\monoref@refinner[1]{%
+  \ifnum\directlua{monoref.known("#1")}>\z@
+    \directlua{monoref.ref_value("#1")}%
+  \else
+    \monoref@slot{\directlua{monoref.newslot("#1","ref")}}{\monorefreftemplate}%
+  \fi}
+
+\newcommand\monoref@record[3]{%   #1 level  #2 number  #3 title
+  \protected@edef\monoref@nm{#2}%
+  \protected@edef\monoref@tl{#3}%
+  \monoref@mark{\directlua{monoref.toc_begin(#1,
+     "\luaescapestring{\monoref@nm}","\luaescapestring{\monoref@tl}")}}%
+  \ifmonoref@hyper
+    \edef\monoref@ti{\directlua{monoref.toc_count()}}%
+    \hypertarget{monoref:toc:\monoref@ti}{}%
+  \fi}
+
+\def\monoref@activate{%
+  \@ifpackageloaded{hyperref}{\monoref@hypertrue}{\monoref@hyperfalse}%
+  \let\monoref@origlabel\label
+  \let\monoref@origsection\section
+  \let\monoref@origsubsection\subsection
+  \let\monoref@origsubsubsection\subsubsection
+  \RenewDocumentCommand\label{m}{%
+    \protected@edef\monoref@cl{\@currentlabel}%
+    \monoref@mark{\directlua{monoref.label_begin("##1","\luaescapestring{\monoref@cl}")}}%
+    \monoref@target{lbl:##1}%
+    \monoref@origlabel{##1}}%
+  \RenewDocumentCommand\ref{m}{\monoref@link{lbl:##1}{\monoref@refinner{##1}}}%
+  \RenewDocumentCommand\pageref{m}{%
+    \monoref@link{lbl:##1}{\monoref@slot{\directlua{monoref.newslot("##1","page")}}{\monorefpagetemplate}}}%
+  \RenewDocumentCommand\section{s o m}{%
+    \IfBooleanTF{##1}{\monoref@origsection*{##3}}%
+     {\IfValueTF{##2}{\monoref@origsection[##2]{##3}}{\monoref@origsection{##3}}%
+      \monoref@record{1}{\thesection}{##3}}}%
+  \RenewDocumentCommand\subsection{s o m}{%
+    \IfBooleanTF{##1}{\monoref@origsubsection*{##3}}%
+     {\IfValueTF{##2}{\monoref@origsubsection[##2]{##3}}{\monoref@origsubsection{##3}}%
+      \monoref@record{2}{\thesubsection}{##3}}}%
+  \RenewDocumentCommand\subsubsection{s o m}{%
+    \IfBooleanTF{##1}{\monoref@origsubsubsection*{##3}}%
+     {\IfValueTF{##2}{\monoref@origsubsubsection[##2]{##3}}{\monoref@origsubsubsection{##3}}%
+      \monoref@record{3}{\thesubsubsection}{##3}}}%
+  \@ifpackageloaded{amsmath}{\let\ltx@label\label}{}%
+}
+\AtBeginDocument{\monoref@activate}
+
+\newcommand\monoref@indent[1]{\ifcase#1\or\or\hspace{1.5em}\or\hspace{3em}\fi}
+\newcommand\monoref@tocline[5]{%   #1 idx  #2 level  #3 number  #4 title  #5 page
+  \par\noindent\monoref@indent{#2}%
+  \monoref@link{toc:#1}{\makebox[2.6em][l]{#3}#4}\ \dotfill\ #5}
+
+\newcount\monoref@nt \newcount\monoref@k
+\newcommand\monoref@buildtoc{%
+  \directlua{monoref.target = "toc"}%
+  \pagenumbering{roman}%
+  \monoref@nt=\directlua{monoref.toc_count()}\relax
+  \ifnum\monoref@nt>\z@
+    \section*{\contentsname}\par\medskip
+    \monoref@k=\z@
+    \loop\ifnum\monoref@k<\monoref@nt
+      \advance\monoref@k\@ne
+      \monoref@tocline
+        {\the\monoref@k}%
+        {\directlua{monoref.toc_level(\the\monoref@k)}}%
+        {\directlua{monoref.toc_num(\the\monoref@k)}}%
+        {\directlua{monoref.toc_title(\the\monoref@k)}}%
+        {\directlua{monoref.toc_page(\the\monoref@k)}}%
+    \repeat
+    \clearpage
+  \fi}
+
+\newif\ifmonoref@flushing
+\AddToHook{shipout/before}{%
+  \ifmonoref@flushing\else
+    \directlua{monoref.hold(\number\ShipoutBox, \the\value{page})}%
+    \DiscardShipoutBox
+  \fi}
+
+\newcount\monoref@i
+\AtEndDocument{%
+  \clearpage
+  \ifmonoref@dotoc \monoref@buildtoc \fi
+  \directlua{monoref.finalize()}%
+  \monoref@i=\directlua{monoref.qcount()}\relax
+  \monoref@flushingtrue
+  \loop\ifnum\monoref@i>\z@
+    \directlua{monoref.qpop()}%
+    \shipout\box\monoref@shipbox
+    \advance\monoref@i\m@ne
+  \repeat
+  \monoref@flushingfalse}
+
+%</package>
+%    \end{macrocode}
+%
+% \section{Implementation: the Lua backend}
+%
+% The backend is a plain Lua module, generated verbatim into
+% \texttt{monoref.lua}.  Its own comment header carries the
+% licence (a \texttt{docstrip} \texttt{\%\%} header would be invalid
+% Lua), so it is shipped standalone rather than generated by the
+% installer.
+%
+%    \begin{macrocode}
+%<*lua>
+-- monoref.lua
+-- Lua backend for the monoref package.
+--
+-- Copyright (C) 2025 Srikanth Mohankumar <srikanthmohankumar@gmail.com>
+-- This work may be distributed and/or modified under the conditions of
+-- the LaTeX Project Public License, version 1.3c or later.
+--   http://www.latex-project.org/lppl.txt
+
+monoref = monoref or {}
+
+monoref.labels    = {}   -- name -> {ref=, page=}
+monoref.slots     = {}   -- id   -> {name=, font=, kind=}   kind: ref | page | total
+monoref.marks     = {}   -- id   -> {kind=, key=}           kind: label | toc
+monoref.toc       = {}   -- ordered list of {level=, num=, title=, page=}
+monoref.held      = {}   -- body pages (arabic)
+monoref.toc_pages = {}   -- front-matter pages (roman)
+monoref.queue     = {}   -- final ship order
+monoref.target    = "body"
+monoref.sid, monoref.mid, monoref.total = 0, 0, 0
+
+monoref.slotattr = luatexbase.new_attribute("monorefslot")
+monoref.markattr = luatexbase.new_attribute("monorefmark")
+
+local HLIST = node.id("hlist")
+local VLIST = node.id("vlist")
+local GLYPH = node.id("glyph")
+local GLUE  = node.id("glue")
+
+--------------------------------------------------------------------------
+-- Registration (all print/sprint straight back into the TeX stream)
+--------------------------------------------------------------------------
+function monoref.known(name)
+  tex.print(monoref.labels[name] and 1 or 0)
+end
+
+function monoref.newslot(name, kind)
+  monoref.sid = monoref.sid + 1
+  monoref.slots[monoref.sid] = { name = name, font = font.current(), kind = kind }
+  tex.print(monoref.sid)
+end
+
+local function newmark(kind, key)
+  monoref.mid = monoref.mid + 1
+  monoref.marks[monoref.mid] = { kind = kind, key = key }
+  return monoref.mid
+end
+
+function monoref.label_begin(name, ref)
+  monoref.labels[name] = { ref = ref, page = 0 }
+  tex.print(newmark("label", name))
+end
+
+function monoref.ref_value(name)
+  local L = monoref.labels[name]
+  tex.sprint(L and L.ref or "??")
+end
+
+function monoref.toc_begin(level, num, title)
+  monoref.toc[#monoref.toc + 1] = { level = level, num = num, title = title, page = 0 }
+  tex.print(newmark("toc", #monoref.toc))
+end
+
+function monoref.toc_count()  tex.print(#monoref.toc)          end
+function monoref.toc_level(i) tex.print(monoref.toc[i].level)  end
+function monoref.toc_num(i)   tex.sprint(monoref.toc[i].num)   end
+function monoref.toc_title(i) tex.sprint(monoref.toc[i].title) end
+function monoref.toc_page(i)  tex.print(monoref.toc[i].page)   end
+
+--------------------------------------------------------------------------
+-- Marker scan: stamp every label / TOC entry with the TRUE page it is on
+--------------------------------------------------------------------------
+local function scan(head, pg)
+  local n = head
+  while n do
+    local m = node.get_attribute(n, monoref.markattr)
+    if m and monoref.marks[m] then
+      local r = monoref.marks[m]
+      if r.kind == "label" and monoref.labels[r.key] then
+        monoref.labels[r.key].page = pg
+      elseif r.kind == "toc" and monoref.toc[r.key] then
+        monoref.toc[r.key].page = pg
+      end
+    end
+    local id = n.id
+    if id == HLIST or id == VLIST then scan(n.head, pg) end
+    n = n.next
+  end
+end
+
+function monoref.hold(reg, pg)
+  local b = tex.getbox(reg)
+  if not b then return end
+  local c = node.copy(b)
+  scan(c.head, pg)
+  local dest = (monoref.target == "toc") and monoref.toc_pages or monoref.held
+  dest[#dest + 1] = c
+end
+
+--------------------------------------------------------------------------
+-- Slot filling at flush (fixed width kept -> never reflows)
+--------------------------------------------------------------------------
+local function glyphs_of(s, fid)
+  local fnt = font.getfont(fid)
+  local first, last
+  for i = 1, #s do
+    local code = s:byte(i)
+    local g = node.new(GLYPH)
+    g.font, g.char, g.subtype = fid, code, 0
+    if fnt and fnt.characters and fnt.characters[code] then
+      local ci = fnt.characters[code]
+      g.width, g.height, g.depth = ci.width or 0, ci.height or 0, ci.depth or 0
+    end
+    if first then last.next = g; g.prev = last; last = g
+    else first, last = g, g end
+  end
+  return first, last
+end
+
+local function value_of(rec)
+  if rec.kind == "total" then return tostring(monoref.total) end
+  local L = monoref.labels[rec.name]
+  if not L then return "??" end
+  if rec.kind == "page" then
+    return (L.page and L.page > 0) and tostring(L.page) or "??"
+  end
+  return L.ref
+end
+
+-- Fill one placeholder hbox to the value's NATURAL width (the enclosing
+-- line is re-justified afterwards so the reserved slack disappears).
+local function fill_slot(hbox, id)
+  local val = value_of(monoref.slots[id])
+  if hbox.head then node.flush_list(hbox.head); hbox.head = nil end
+  local gf = glyphs_of(val, monoref.slots[id].font)
+  local packed = node.hpack(gf or node.new(GLUE))
+  hbox.head       = packed.head
+  hbox.width      = packed.width
+  hbox.height     = packed.height
+  hbox.depth      = packed.depth
+  hbox.glue_set   = 0
+  hbox.glue_sign  = 0
+  hbox.glue_order = 0
+  packed.head = nil
+  node.free(packed)
+end
+
+-- Re-pack a line to its original width so its interword glue absorbs the
+-- space freed by shrinking a slot (keeps the line justified, no gap).
+local function rejustify(hbox)
+  local packed = node.hpack(hbox.head, hbox.width, "exactly")
+  hbox.head       = packed.head
+  hbox.glue_set   = packed.glue_set
+  hbox.glue_sign  = packed.glue_sign
+  hbox.glue_order = packed.glue_order
+  hbox.height     = packed.height
+  hbox.depth      = packed.depth
+  packed.head = nil
+  node.free(packed)
+end
+
+-- Patch every slot in a box; re-justify each line that contained one.
+local function patch_box(box)
+  local direct = false
+  local n = box.head
+  while n do
+    local id = n.id
+    if id == HLIST or id == VLIST then
+      local a = node.get_attribute(n, monoref.slotattr)
+      if a and monoref.slots[a] then
+        fill_slot(n, a)
+        direct = true
+      else
+        patch_box(n)
+      end
+    end
+    n = n.next
+  end
+  if direct and box.id == HLIST then rejustify(box) end
+end
+
+--------------------------------------------------------------------------
+-- Finalisation and shipping
+--------------------------------------------------------------------------
+function monoref.finalize()
+  monoref.total = #monoref.held
+  for i = 1, #monoref.toc_pages do patch_box(monoref.toc_pages[i]) end
+  for i = 1, #monoref.held      do patch_box(monoref.held[i])      end
+  monoref.queue = {}
+  for i = 1, #monoref.toc_pages do monoref.queue[#monoref.queue + 1] = monoref.toc_pages[i] end
+  for i = 1, #monoref.held      do monoref.queue[#monoref.queue + 1] = monoref.held[i]      end
+end
+
+function monoref.qcount() tex.print(#monoref.queue) end
+function monoref.qpop()   tex.setbox(monoref.shipreg, table.remove(monoref.queue, 1)) end
+
+return monoref
+%</lua>
+%    \end{macrocode}
+%
+% \Finale
+\endinput
