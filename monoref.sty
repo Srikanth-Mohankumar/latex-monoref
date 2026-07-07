@@ -1,0 +1,158 @@
+%%
+%% This is file `monoref.sty',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% monoref.dtx  (with options: `package')
+%% 
+%% This is a generated file.
+%% 
+%% Copyright (C) 2026 Srikanth Mohankumar <srikanthmohankumar@gmail.com>
+%% 
+%% This work may be distributed and/or modified under the conditions of
+%% the LaTeX Project Public License, either version 1.3c of this license
+%% or (at your option) any later version.  The latest version of this
+%% license is in http://www.latex-project.org/lppl.txt and version 1.3c
+%% or later is part of all distributions of LaTeX version 2008 or later.
+%% 
+%% This work has the LPPL maintenance status `maintained'.
+%% The Current Maintainer of this work is Srikanth Mohankumar.
+%% 
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{monoref}%
+  [2026/07/07 v1.3 Single-pass cross-references, page totals and TOC (LuaLaTeX)]
+
+\RequirePackage{iftex}
+\RequireLuaTeX
+\RequirePackage{xparse}
+
+\newif\ifmonoref@dotoc \monoref@dotoctrue
+\DeclareOption{notoc}{\monoref@dotocfalse}
+\ProcessOptions\relax
+
+\directlua{if not pcall(require, "monoref") then
+             dofile("monoref.lua") end}
+
+\newbox\monoref@shipbox
+\directlua{monoref.shipreg = \number\monoref@shipbox}
+\attributedef\monoref@slotattr=\directlua{tex.print(monoref.slotattr)}\relax
+\attributedef\monoref@markattr=\directlua{tex.print(monoref.markattr)}\relax
+
+\newcommand\monorefreftemplate{0.0.0}
+\newcommand\monorefpagetemplate{000}
+\newlength\monorefslotwidth \setlength\monorefslotwidth{0pt}
+\newlength\monoref@tmpwd
+
+\newcommand\monoref@slot[2]{%   #1 = slot id   #2 = width template
+  \begingroup
+    \ifdim\monorefslotwidth>\z@ \monoref@tmpwd=\monorefslotwidth
+    \else \settowidth\monoref@tmpwd{#2}\fi
+    \monoref@slotattr=#1\relax \hbox to \monoref@tmpwd{\hfil}%
+  \endgroup}
+
+\newcommand\monoref@mark[1]{{\monoref@markattr=#1\relax \special{}}}
+
+\newif\ifmonoref@hyper \monoref@hyperfalse
+\newcommand\monoref@target[1]{\ifmonoref@hyper\hypertarget{monoref:#1}{}\fi}
+\newcommand\monoref@link[2]{\ifmonoref@hyper\hyperlink{monoref:#1}{#2}\else#2\fi}
+
+\newcommand\lastpage{\monoref@slot{\directlua{monoref.newslot("","total")}}{\monorefpagetemplate}}
+
+\newcommand\monoref@refinner[1]{%
+  \ifnum\directlua{monoref.known("#1")}>\z@
+    \directlua{monoref.ref_value("#1")}%
+  \else
+    \monoref@slot{\directlua{monoref.newslot("#1","ref")}}{\monorefreftemplate}%
+  \fi}
+
+\newcommand\monoref@record[3]{%   #1 level  #2 number  #3 title
+  \protected@edef\monoref@nm{#2}%
+  \protected@edef\monoref@tl{#3}%
+  \monoref@mark{\directlua{monoref.toc_begin(#1,
+     "\luaescapestring{\monoref@nm}","\luaescapestring{\monoref@tl}")}}%
+  \ifmonoref@hyper
+    \edef\monoref@ti{\directlua{monoref.toc_count()}}%
+    \hypertarget{monoref:toc:\monoref@ti}{}%
+  \fi}
+
+\def\monoref@activate{%
+  \@ifpackageloaded{hyperref}{\monoref@hypertrue}{\monoref@hyperfalse}%
+  \let\monoref@origlabel\label
+  \let\monoref@origsection\section
+  \let\monoref@origsubsection\subsection
+  \let\monoref@origsubsubsection\subsubsection
+  \RenewDocumentCommand\label{m}{%
+    \protected@edef\monoref@cl{\@currentlabel}%
+    \monoref@mark{\directlua{monoref.label_begin("##1","\luaescapestring{\monoref@cl}")}}%
+    \monoref@target{lbl:##1}%
+    \monoref@origlabel{##1}}%
+  \RenewDocumentCommand\ref{m}{\monoref@link{lbl:##1}{\monoref@refinner{##1}}}%
+  \RenewDocumentCommand\pageref{m}{%
+    \monoref@link{lbl:##1}{\monoref@slot{\directlua{monoref.newslot("##1","page")}}{\monorefpagetemplate}}}%
+  \RenewDocumentCommand\section{s o m}{%
+    \IfBooleanTF{##1}{\monoref@origsection*{##3}}%
+     {\IfValueTF{##2}{\monoref@origsection[##2]{##3}}{\monoref@origsection{##3}}%
+      \monoref@record{1}{\thesection}{##3}}}%
+  \RenewDocumentCommand\subsection{s o m}{%
+    \IfBooleanTF{##1}{\monoref@origsubsection*{##3}}%
+     {\IfValueTF{##2}{\monoref@origsubsection[##2]{##3}}{\monoref@origsubsection{##3}}%
+      \monoref@record{2}{\thesubsection}{##3}}}%
+  \RenewDocumentCommand\subsubsection{s o m}{%
+    \IfBooleanTF{##1}{\monoref@origsubsubsection*{##3}}%
+     {\IfValueTF{##2}{\monoref@origsubsubsection[##2]{##3}}{\monoref@origsubsubsection{##3}}%
+      \monoref@record{3}{\thesubsubsection}{##3}}}%
+  \@ifpackageloaded{amsmath}{\let\ltx@label\label}{}%
+}
+\AtBeginDocument{\monoref@activate}
+
+\newcommand\monoref@indent[1]{\ifcase#1\or\or\hspace{1.5em}\or\hspace{3em}\fi}
+\newcommand\monoref@tocline[5]{%   #1 idx  #2 level  #3 number  #4 title  #5 page
+  \par\noindent\monoref@indent{#2}%
+  \monoref@link{toc:#1}{\makebox[2.6em][l]{#3}#4}\ \dotfill\ #5}
+
+\newcount\monoref@nt \newcount\monoref@k
+\newcommand\monoref@buildtoc{%
+  \directlua{monoref.target = "toc"}%
+  \pagenumbering{roman}%
+  \monoref@nt=\directlua{monoref.toc_count()}\relax
+  \ifnum\monoref@nt>\z@
+    \section*{\contentsname}\par\medskip
+    \monoref@k=\z@
+    \loop\ifnum\monoref@k<\monoref@nt
+      \advance\monoref@k\@ne
+      \monoref@tocline
+        {\the\monoref@k}%
+        {\directlua{monoref.toc_level(\the\monoref@k)}}%
+        {\directlua{monoref.toc_num(\the\monoref@k)}}%
+        {\directlua{monoref.toc_title(\the\monoref@k)}}%
+        {\directlua{monoref.toc_page(\the\monoref@k)}}%
+    \repeat
+    \clearpage
+  \fi}
+
+\newif\ifmonoref@flushing
+\AddToHook{shipout/before}{%
+  \ifmonoref@flushing\else
+    \directlua{monoref.hold(\number\ShipoutBox, \the\value{page})}%
+    \DiscardShipoutBox
+  \fi}
+
+\newcount\monoref@i
+\AtEndDocument{%
+  \clearpage
+  \ifmonoref@dotoc \monoref@buildtoc \fi
+  \directlua{monoref.finalize()}%
+  \monoref@i=\directlua{monoref.qcount()}\relax
+  \monoref@flushingtrue
+  \loop\ifnum\monoref@i>\z@
+    \directlua{monoref.qpop()}%
+    \shipout\box\monoref@shipbox
+    \advance\monoref@i\m@ne
+  \repeat
+  \monoref@flushingfalse}
+
+%% 
+%% End of file `monoref.sty'.
+%%
+%% End of file `monoref.sty'.

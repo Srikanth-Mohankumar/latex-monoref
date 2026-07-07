@@ -15,3 +15,6 @@ test/authpack-test-suite.tex
 *.nav
 *.snm
 *.vrb
+*.glo
+*.hd
+*.idx

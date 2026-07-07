@@ -4,7 +4,7 @@
 % Single-pass cross-references, page totals and a table of contents in
 % one LuaLaTeX run -- no rerun, no latexmk, no .aux round-trip.
 %
-% Copyright (C) 2025 Srikanth Mohankumar <srikanthmohankumar@gmail.com>
+% Copyright (C) 2026 Srikanth Mohankumar <srikanthmohankumar@gmail.com>
 %
 % This work may be distributed and/or modified under the conditions of
 % the LaTeX Project Public License, either version 1.3c of this license
@@ -39,9 +39,9 @@
 % \CheckSum{0}
 %
 % \title{The \textsf{monoref} package\thanks{This document
-%   corresponds to \textsf{monoref}~v1.3, dated 2025/07/07.}}
+%   corresponds to \textsf{monoref}~v1.3, dated \today.}}
 % \author{Srikanth Mohankumar \\ \texttt{srikanthmohankumar@gmail.com}}
-% \date{2025/07/07}
+% \date{\today}
 % \maketitle
 %
 % \begin{abstract}
@@ -188,12 +188,12 @@
 %
 % \section{Implementation: the style file}
 %
-% \changes{v1.0}{2025/07/07}{Initial release}
-% \changes{v1.1}{2025/07/07}{Flush-left, font-relative slots; optional
+% \changes{v1.0}{2026/07/07}{Initial release}
+% \changes{v1.1}{2026/07/07}{Flush-left, font-relative slots; optional
 %   hyperref links; three-level clickable TOC}
-% \changes{v1.2}{2025/07/07}{Slots collapse to natural width at flush and
+% \changes{v1.2}{2026/07/07}{Slots collapse to natural width at flush and
 %   the line is re-justified, so short values leave no gap}
-% \changes{v1.3}{2025/07/07}{Renamed to \textsf{monoref}; support
+% \changes{v1.3}{2026/07/07}{Renamed to \textsf{monoref}; support
 %   \textsf{amsmath} numbered-equation labels; patch slots on the
 %   contents page; broad set of examples}
 %
@@ -201,7 +201,7 @@
 %<*package>
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{monoref}%
-  [2025/07/07 v1.3 Single-pass cross-references, page totals and TOC (LuaLaTeX)]
+  [2026/07/07 v1.3 Single-pass cross-references, page totals and TOC (LuaLaTeX)]
 
 \RequirePackage{iftex}
 \RequireLuaTeX
@@ -348,7 +348,7 @@
 -- monoref.lua
 -- Lua backend for the monoref package.
 --
--- Copyright (C) 2025 Srikanth Mohankumar <srikanthmohankumar@gmail.com>
+-- Copyright (C) 2026 Srikanth Mohankumar <srikanthmohankumar@gmail.com>
 -- This work may be distributed and/or modified under the conditions of
 -- the LaTeX Project Public License, version 1.3c or later.
 --   http://www.latex-project.org/lppl.txt

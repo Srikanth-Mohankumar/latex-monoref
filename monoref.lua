@@ -1,7 +1,7 @@
 -- monoref.lua
 -- Lua backend for the monoref package.
 --
--- Copyright (C) 2025 Srikanth Mohankumar <srikanthmohankumar@gmail.com>
+-- Copyright (C) 2026 Srikanth Mohankumar <srikanthmohankumar@gmail.com>
 -- This work may be distributed and/or modified under the conditions of
 -- the LaTeX Project Public License, version 1.3c or later.
 --   http://www.latex-project.org/lppl.txt
