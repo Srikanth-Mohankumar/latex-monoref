@@ -11,7 +11,6 @@ test/authpack-test-suite.tex
 *.blg
 *.run.xml
 *.bcf
-*.pdf
 *.nav
 *.snm
 *.vrb
