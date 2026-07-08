@@ -1,0 +1,186 @@
+\documentclass[tikz,border=4pt]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{libertinus}
+\renewcommand{\ttdefault}{lmtt}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{fontawesome5}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,calc}
+
+\begin{document}
+\begin{tikzpicture}[
+  x=1cm,y=1cm,
+  font=\rmfamily\footnotesize,
+  >=Stealth,
+  title/.style={font=\bfseries\large, align=center},
+  box/.style={draw, rounded corners=2pt, line width=.45pt,
+    align=center, inner sep=4pt, fill=white},
+  leftbox/.style={box, minimum width=3.55cm, minimum height=.98cm,
+    text width=3.05cm},
+  flowbox/.style={box, minimum width=6.05cm, minimum height=1.06cm,
+    text width=3.85cm, align=left, inner xsep=0pt},
+  note/.style={box, minimum width=4.10cm, minimum height=1.06cm,
+    text width=3.72cm, align=center},
+  num/.style={circle, fill=black, text=white, inner sep=2.2pt,
+    font=\bfseries\scriptsize},
+  arrow/.style={->, line width=.45pt},
+  dashframe/.style={draw, dashed, rounded corners=1.5pt, line width=.42pt},
+  page/.style={draw, line width=.45pt, fill=white},
+  rule/.style={draw=black!55, line width=.28pt},
+  desc/.style={anchor=west, text width=4.25cm, align=left,
+    font=\scriptsize\raggedright},
+  tlabel/.style={anchor=west, text width=1.80cm, align=left,
+    font=\scriptsize\raggedright},
+  mini/.style={anchor=west, font=\scriptsize}
+]
+
+% Outer border
+\draw[line width=.55pt, rounded corners=2pt] (0,-.35) rectangle (24.70,16.55);
+
+% Titles
+\node[title, anchor=north] at (2.75,16.25)
+  {(a) Traditional LaTeX\\Two-pass compilation};
+\node[title, anchor=north] at (8.95,16.25)
+  {(b) \texttt{monoref} (This Paper)\\Single-pass compilation};
+\node[title, anchor=north] at (18.25,16.25)
+  {(c) Lifecycle of a Page in \texttt{monoref}\\(Detailed View)};
+
+% (a) Traditional LaTeX
+\draw[dashframe] (.55,9.20) rectangle (4.95,14.70);
+\draw[dashframe] (.55,2.60) rectangle (4.95,8.60);
+\node[font=\itshape\large] at (2.75,14.25) {Run 1};
+\node[leftbox] (r1a) at (2.75,13.12) {Read document\\and build pages};
+\node[leftbox] (r1b) at (2.75,11.35) {References unresolved\\(unknown page numbers)};
+\node[leftbox] (r1c) at (2.75,9.62) {Write .aux file};
+\draw[arrow] (r1a.south) -- (r1b.north);
+\draw[arrow] (r1b.south) -- (r1c.north);
+\draw[arrow,dashed] (r1c.south) -- (2.75,8.60);
+
+\node[font=\itshape\large] at (2.75,8.15) {Run 2};
+\node[leftbox] (r2a) at (2.75,7.15) {Read document\\and .aux file};
+\node[leftbox] (r2b) at (2.75,5.30) {References resolved\\(with correct page numbers)};
+\node[leftbox] (r2c) at (2.75,3.45) {Ship pages to output};
+\draw[arrow] (r2a.south) -- (r2b.north);
+\draw[arrow] (r2b.south) -- (r2c.north);
+
+\node[note, minimum height=1.22cm, font=\scriptsize, text width=3.72cm] at (2.75,1.28)
+  {Requires at least two compilations\\to obtain correct\\cross-references.};
+\node[font=\bfseries\LARGE] at (5.45,8.55) {vs.};
+
+% (b) monoref pipeline
+\def\mx{8.95}
+\foreach \i/\y/\ico/\txt in {
+1/14.00/{\faIcon{file-alt}}/{Read document input},
+2/12.40/{\faLayerGroup}/{Build page normally},
+3/10.80/{\faDatabase}/{Hold page in memory\\(do not ship)},
+4/9.20/{\faSearch}/{Scan page for markers\\(labels, TOC, and slots)},
+5/7.60/{\faBullseye}/{Resolve true page numbers\\and destinations},
+6/6.00/{\faIcon{pencil-alt}}/{Patch reserved slots\\with resolved values},
+7/4.40/{\faParagraph}/{Rejustify affected lines\\if needed},
+8/2.80/{\faPrint}/{Ship final page to output}}
+{
+  % Fixed-column step row: badge, icon, text are separated so nothing overlaps.
+  \node[flowbox] (m\i) at (\mx,\y) {\hspace*{1.58cm}\parbox[c]{3.78cm}{\centering\txt}};
+  \node[num] at (6.34,\y) {\i};
+  \node[font=\Large, text=black!65] at (7.16,\y) {\ico};
+}
+\foreach \a/\b in {1/2,2/3,3/4,4/5,5/6,6/7,7/8}
+  {\draw[arrow] (m\a.south) -- (m\b.north);}
+\node[note, minimum width=6.05cm, minimum height=1.12cm,
+  text width=5.55cm, font=\scriptsize, inner ysep=2pt] at (\mx,1.28)
+  {All references are resolved and patched\\within the same compilation.};
+
+% (c) detailed lifecycle
+\draw[line width=.45pt] (12.65,14.58) -- (12.65,1.03);
+\draw[->,line width=.45pt] (12.65,14.58) -- (12.65,.75);
+
+\def\px{15.05}
+\def\dx{20.00}
+\def\pR{19.55}
+
+\foreach \y/\lab in {
+12.70/{1. Held Page\\(after build)},
+10.50/{2. Marker Scan},
+8.05/{3. Resolution},
+5.95/{4. Patch Slots},
+3.70/{5. Rejustify},
+1.50/{6. Shipout}}
+{
+  \fill (12.65,\y) circle (.075);
+  \node[tlabel] at (12.90,\y) {\lab};
+}
+
+% stage 1
+\draw[page] (\px,11.80) rectangle (\pR,13.65);
+\draw[rule] (15.40,13.35)--(19.20,13.35);
+\draw[rule] (15.40,13.15)--(19.05,13.15);
+\draw[rule] (15.40,12.95)--(18.75,12.95);
+\node[anchor=west, font=\scriptsize] at (15.42,12.55)
+  {See Figure \fbox{slot} on page \fbox{slot}.};
+\draw[rule] (15.40,12.20)--(18.85,12.20);
+\node[desc] at (\dx,12.95)
+  {Placeholders (slots) are inserted\\for unknown values. The page is\\held in Lua memory.};
+
+% stage 2
+\draw[page] (\px,9.70) rectangle (\pR,11.35);
+\draw[rule] (15.40,11.12)--(19.20,11.12);
+\draw[rule] (15.40,10.92)--(18.80,10.92);
+\draw[rule] (15.80,10.50)--(16.75,10.50);
+\draw[rule] (17.35,10.50)--(18.50,10.50);
+\draw[rule] (16.00,10.10)--(17.10,10.10);
+\fill (15.65,10.56) circle (.075);
+\fill (17.25,10.48) rectangle +(0.13,0.13);
+\node[diamond, draw, inner sep=1.0pt, minimum size=5pt] at (19.05,10.78) {};
+\node[desc] at (\dx,10.60)
+  {\texttt{monoref} scans the node list\\for labels, TOC markers,\\and slot locations.};
+
+% stage 3
+\draw[page] (\px,6.80) rectangle (\pR,9.05);
+\draw[rule] (17.50,6.95)--(17.50,8.95);
+\node[anchor=west, font=\bfseries\scriptsize] at (15.30,8.70) {Found};
+\node[anchor=west, font=\bfseries\scriptsize] at (17.82,8.70) {Resolves to};
+\draw[rule] (15.25,8.45)--(19.25,8.45);
+\node[mini] at (15.32,8.10) {Label: fig:boat};
+\node[mini] at (17.82,8.10) {page 17};
+\node[mini] at (15.32,7.72) {TOC: sec:intro};
+\node[mini] at (17.82,7.72) {page 3};
+\node[mini] at (15.32,7.34) {Slot \#1};
+\node[mini] at (17.82,7.34) {``5''};
+\node[mini] at (15.32,6.98) {Slot \#2};
+\node[mini] at (17.82,6.98) {``17''};
+\node[desc] at (\dx,8.05)
+  {True destinations are determined\\from TeX counters and\\internal tables.};
+
+% stage 4
+\draw[page] (\px,5.15) rectangle (\pR,6.75);
+\draw[rule] (15.40,6.52)--(19.20,6.52);
+\draw[rule] (15.40,6.32)--(18.80,6.32);
+\node[anchor=west, font=\scriptsize] at (15.62,5.90)
+  {See Figure \fbox{5} on page \fbox{17}.};
+\draw[rule] (15.40,5.52)--(18.95,5.52);
+\node[desc] at (\dx,5.98)
+  {Reserved slots are replaced with\\the resolved values.};
+
+% stage 5
+\draw[page] (\px,2.95) rectangle (\pR,4.50);
+\draw[rule] (15.40,4.28)--(19.20,4.28);
+\draw[rule] (15.40,4.06)--(18.80,4.06);
+\node[anchor=west, font=\scriptsize] at (15.62,3.65)
+  {See Figure 5 on page 17.};
+\draw[dashed, line width=.42pt] (15.66,3.42)--(18.45,3.42);
+\draw[rule] (15.40,3.18)--(18.85,3.18);
+\node[desc] at (\dx,3.72)
+  {Lines containing replacements\\are re-justified if width changes\\occurred.};
+
+% stage 6
+\draw[page] (\px,.75) rectangle (\pR,2.10);
+\draw[rule] (15.40,1.90)--(19.05,1.90);
+\draw[rule] (15.40,1.70)--(18.70,1.70);
+\node[anchor=west, font=\scriptsize] at (15.62,1.28)
+  {See Figure 5 on page 17.};
+\draw[rule] (15.40,1.00)--(18.85,1.00);
+\node[desc] at (\dx,1.38)
+  {The page is shipped to the\\output routine. No rerun\\is needed.};
+
+\end{tikzpicture}
+\end{document}
