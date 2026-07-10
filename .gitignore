@@ -17,3 +17,6 @@ test/authpack-test-suite.tex
 *.glo
 *.hd
 *.idx
+
+# Keep the TUGboat submission private until publication.
+/tugboat/
