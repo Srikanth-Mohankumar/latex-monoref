@@ -4,7 +4,7 @@ Single-pass cross-references, page totals and a table of contents in **one
 LuaLaTeX run** — no rerun, no `latexmk`, no `.aux` round-trip.
 
 - **Author / maintainer:** Srikanth Mohankumar <srikanthmohankumar@gmail.com>
-- **Version:** 1.3 (2026/07/07)
+- **Version:** 1.4-dev (2026/07/31, development — latest release is 1.3)
 - **License:** LaTeX Project Public License (LPPL) 1.3c or later
 - **Requires:** LuaLaTeX (the package stops with an error on other engines)
 - **Status:** experimental
@@ -24,6 +24,10 @@ It provides, resolved in a single run:
 
 - `\ref{label}` — forward or backward section / equation numbers
 - `\pageref{label}` — forward or backward page numbers (shipout-accurate)
+- `\cite{key}` — plain numbered citations against a hand-written
+  `thebibliography` (or an existing BibTeX `.bbl`); forward citations,
+  repeats, multi-key lists in source order, and the optional note all
+  resolve in the single run
 - `\lastpage` — the total number of body pages
 - a multi-level table of contents (`\section`, `\subsection`,
   `\subsubsection`) collected during the run and prepended at the end with
@@ -100,10 +104,13 @@ lualatex yourfile.tex
 ### Options and knobs
 
 - Package option `notoc` — do not generate the contents page.
+- Package option `nobib` — leave `\cite` alone.  (This also happens
+  automatically when **natbib**, **cite** or **biblatex** is loaded.)
 - Slot widths are font-relative templates: `\monorefreftemplate` (default
   `0.0.0`) sizes `\ref` slots and must be at least as wide as the widest
   forward (sub)section number; `\monorefpagetemplate` (default `000`) sizes
-  `\pageref`/`\lastpage` slots. Redefine with `\renewcommand`, e.g.
+  `\pageref`/`\lastpage` slots; `\monorefcitetemplate` (default `00`) sizes
+  forward `\cite` slots. Redefine with `\renewcommand`, e.g.
   `\renewcommand\monorefreftemplate{0.0}`. At flush each slot collapses to
   the value's natural width and its line is re-justified, so even a
   single-digit value leaves no gap; the template only guides the
@@ -125,8 +132,12 @@ a real document.
   also conflicts with **titlesec** and **varioref**.
 - Numbered-equation `\ref` works (including with **amsmath**), but
   `\eqref` and lists of figures/tables are not provided.
+- `\cite` covers plain-LaTeX numbered citations only: no sorting or
+  range compression of citation lists, no author–year styles, and no
+  **natbib**/**cite**/**biblatex** interfaces (when one of those is
+  loaded, `\cite` is left to it and needs reruns as usual).  Generating
+  a fresh `.bbl` still requires running BibTeX.
 - A forward value wider than its slot template overflows.
-- `\eqref`, hyperlinks and lists of figures/tables are not provided.
 - Because it intercepts every `\shipout`, it is incompatible with other
   packages that manipulate shipout.
 
@@ -152,6 +163,7 @@ LuaLaTeX):
 | `04-notoc.tex` | the `notoc` option |
 | `05-page-of-total.tex` | a "Page X of Y" footer with fancyhdr and `\lastpage` |
 | `06-custom-slot-width.tex` | widening the slot templates |
+| `07-citations.tex` | single-run numbered `\cite` with a hand-written `thebibliography` |
 
 ## License
 

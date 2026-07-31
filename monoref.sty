@@ -21,7 +21,7 @@
 %% 
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{monoref}%
-  [2026/07/07 v1.3 Single-pass cross-references, page totals and TOC (LuaLaTeX)]
+  [2026/07/31 v1.4-dev Single-pass cross-references, page totals, TOC and citations (LuaLaTeX)]
 
 \RequirePackage{iftex}
 \RequireLuaTeX
@@ -29,6 +29,8 @@
 
 \newif\ifmonoref@dotoc \monoref@dotoctrue
 \DeclareOption{notoc}{\monoref@dotocfalse}
+\newif\ifmonoref@dobib \monoref@dobibtrue
+\DeclareOption{nobib}{\monoref@dobibfalse}
 \ProcessOptions\relax
 
 \directlua{if not pcall(require, "monoref") then
@@ -41,6 +43,7 @@
 
 \newcommand\monorefreftemplate{0.0.0}
 \newcommand\monorefpagetemplate{000}
+\newcommand\monorefcitetemplate{00}
 \newlength\monorefslotwidth \setlength\monorefslotwidth{0pt}
 \newlength\monoref@tmpwd
 
@@ -65,6 +68,29 @@
   \else
     \monoref@slot{\directlua{monoref.newslot("#1","ref")}}{\monorefreftemplate}%
   \fi}
+
+\newcommand\monoref@biblabel[2]{%   #1 = cite key   #2 = printed label value
+  \protected@edef\monoref@cl{#2}%
+  \monoref@mark{\directlua{monoref.label_begin("mbib:\luaescapestring{#1}",
+     "\luaescapestring{\monoref@cl}")}}%
+  \monoref@target{lbl:mbib:#1}}
+
+\newcommand\monoref@citeinner[1]{%
+  \ifnum\directlua{monoref.known("mbib:\luaescapestring{#1}")}>\z@
+    \directlua{monoref.ref_value("mbib:\luaescapestring{#1}")}%
+  \else
+    \monoref@slot{\directlua{monoref.newslot("mbib:\luaescapestring{#1}","ref")}}%
+      {\monorefcitetemplate}%
+  \fi}
+
+\newcommand\monoref@citelist[1]{%   keys in source order, kernel separator
+  \let\monoref@sep\@empty
+  \@for\monoref@cb:=#1\do{%
+    \edef\monoref@cb{\expandafter\@firstofone\monoref@cb\@empty}%
+    \if@filesw\immediate\write\@auxout{\string\citation{\monoref@cb}}\fi
+    \monoref@sep
+    \monoref@link{lbl:mbib:\monoref@cb}{\monoref@citeinner{\monoref@cb}}%
+    \def\monoref@sep{,\penalty\@m\ }}}
 
 \newcommand\monoref@record[3]{%   #1 level  #2 number  #3 title
   \protected@edef\monoref@nm{#2}%
@@ -103,6 +129,25 @@
      {\IfValueTF{##2}{\monoref@origsubsubsection[##2]{##3}}{\monoref@origsubsubsection{##3}}%
       \monoref@record{3}{\thesubsubsection}{##3}}}%
   \@ifpackageloaded{amsmath}{\let\ltx@label\label}{}%
+  \ifmonoref@dobib
+    \@ifpackageloaded{natbib}{\monoref@dobibfalse}{}%
+    \@ifpackageloaded{cite}{\monoref@dobibfalse}{}%
+    \@ifpackageloaded{biblatex}{\monoref@dobibfalse}{}%
+  \fi
+  \ifmonoref@dobib
+    \let\monoref@origbibitem\bibitem
+    \def\bibitem{\@ifnextchar[\monoref@lbibitem\monoref@bibitem}%]
+    \def\monoref@lbibitem[##1]##2{%
+      \monoref@origbibitem[##1]{##2}\monoref@biblabel{##2}{##1}}%
+    \def\monoref@bibitem##1{%
+      \monoref@origbibitem{##1}\monoref@biblabel{##1}{\@currentlabel}}%
+    \RenewDocumentCommand\cite{o m}{%
+      \IfValueTF{##1}{\@tempswatrue}{\@tempswafalse}%
+      \@cite{\monoref@citelist{##2}}{\IfValueTF{##1}{##1}{}}}%
+  \else
+    \PackageInfo{monoref}{Citation support off
+      (nobib option, or natbib/cite/biblatex detected)}%
+  \fi
 }
 \AtBeginDocument{\monoref@activate}
 

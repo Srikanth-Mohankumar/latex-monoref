@@ -1,0 +1,26 @@
+% monoref -- single-run numbered citations
+% Compile once with LuaLaTeX:  lualatex 07-citations.tex
+%
+% Every \cite below appears BEFORE the bibliography, so all of them are
+% forward references; monoref patches the numbers at the end of the run.
+% Works with a hand-written thebibliography (no BibTeX run needed).
+\documentclass{article}
+\usepackage{monoref}
+
+\begin{document}
+
+\section{Citing forward}\label{sec:cite}
+A single citation~\cite{knuth}, a repeat of it~\cite{knuth}, a
+different one with a note~\cite[Chapter~2]{lamport}, and a multi-key
+list~\cite{knuth,luatex,lamport} (source order, as in plain \LaTeX).
+The bibliography itself starts on page~\pageref{bib:start}.
+
+\begin{thebibliography}{9}\label{bib:start}
+\bibitem{knuth} D.~E. Knuth. \emph{The \TeX book}. Addison-Wesley, 1986.
+\bibitem{lamport} L.~Lamport. \emph{\LaTeX: A Document Preparation
+  System}. Addison-Wesley, 2nd edition, 1994.
+\bibitem{luatex} LuaTeX development team. \emph{LuaTeX Reference
+  Manual}, 2024.
+\end{thebibliography}
+
+\end{document}

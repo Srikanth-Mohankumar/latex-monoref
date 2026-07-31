@@ -39,15 +39,15 @@
 % \CheckSum{0}
 %
 % \title{The \textsf{monoref} package\thanks{This document
-%   corresponds to \textsf{monoref}~v1.3, dated \today.}}
+%   corresponds to \textsf{monoref}~v1.4-dev, dated \today.}}
 % \author{Srikanth Mohankumar \\ \texttt{srikanthmohankumar@gmail.com}}
 % \date{\today}
 % \maketitle
 %
 % \begin{abstract}
 %   \textsf{monoref} resolves forward cross-references, page
-%   references, the total page count and a multi-level table of
-%   contents in a \emph{single} \LuaLaTeX{} run.  No second pass, no
+%   references, plain numbered citations, the total page count and a
+%   multi-level table of contents in a \emph{single} \LuaLaTeX{} run.  No second pass, no
 %   \texttt{latexmk}, and no \texttt{.aux} round-trip are required.  It
 %   holds every finished page in memory and back-patches the still
 %   unknown values at |\end{document}|.  When \textsf{hyperref} is
@@ -114,6 +114,40 @@
 % \DescribeMacro{\lastpage}
 % Prints the total number of body pages (front matter excluded).
 %
+% \DescribeMacro{\cite}
+% Prints the citation label(s) of one or more |\bibitem| keys, in
+% source order, formatted through the class's |\@cite| (brackets in
+% the standard classes).  A citation before the bibliography is a
+% forward reference and resolves in the same single run.  See the
+% Citations section below.
+%
+% \section{Citations}
+%
+% From v1.4 the package resolves plain-\LaTeX{} numbered citations in
+% the same single run.  Every |\bibitem| registers its citation label
+% (the number, or the optional |[label]| text) under the hood, and
+% |\cite| goes through the same slot machinery as |\ref|: a citation
+% \emph{after} its |\bibitem| is typeset immediately, a citation
+% \emph{before} it -- the normal case, with the bibliography at the end
+% of the document -- becomes a reserved slot that is patched at flush.
+% Multiple keys (|\cite{a,b}|) are printed in source order with the
+% kernel's separator, exactly as plain \LaTeX{} does; the optional note
+% (|\cite[p.~5]{a}|) is supported.  With \textsf{hyperref} loaded,
+% citations link to their bibliography entries.
+%
+% This covers a hand-written |thebibliography|.  A
+% \textsc{Bib}\TeX{}-generated |.bbl| also works once it exists (its
+% |\bibitem|s register normally when |\bibliography| reads it), but
+% generating or refreshing the |.bbl| still requires running
+% \textsc{Bib}\TeX{}, which is outside the single-run scope.
+%
+% What is \emph{not} provided: sorting or range compression of
+% citation lists, author--year styles, and the \textsf{natbib},
+% \textsf{cite} and \textsf{biblatex} interfaces.  If one of those
+% packages is loaded, \textsf{monoref} leaves |\cite| alone (their
+% |.aux|-based behaviour, needing reruns, is unchanged); the package
+% option |nobib| disables the citation support explicitly.
+%
 % \section{Slot width}
 %
 % Forward values are reserved with a font-relative width taken from a
@@ -125,7 +159,11 @@
 % |\monorefreftemplate| (default |0.0.0|) sizes |\ref| slots; it must be at
 % least as wide as the widest forward (sub)section number.
 % |\monorefpagetemplate| (default |000|) sizes |\pageref| and |\lastpage|
-% slots.  Redefine either with |\renewcommand|, e.g.
+% slots.
+% \DescribeMacro{\monorefcitetemplate}
+% |\monorefcitetemplate| (default |00|) sizes forward |\cite| slots; it
+% must be at least as wide as the widest citation label.  Redefine any
+% of them with |\renewcommand|, e.g.
 % |\renewcommand\monorefreftemplate{0.0}| for a document with no forward
 % subsubsection references.
 % \DescribeMacro{\monorefslotwidth}
@@ -164,6 +202,10 @@
 %   \item Numbered-equation |\ref| works, including with \textsf{amsmath};
 %     but |\eqref| (the parenthesised form) and lists of figures/tables
 %     are not provided.
+%   \item |\cite| covers plain-\LaTeX{} numbered citations only: no
+%     sorting or range compression, no author--year styles, and no
+%     \textsf{natbib}/\textsf{cite}/\textsf{biblatex} (if one of those
+%     is loaded, |\cite| is left to it and needs reruns as usual).
 %   \item Because it intercepts every |\shipout|, it is incompatible
 %     with other packages that manipulate shipout.
 % \end{itemize}
@@ -182,6 +224,8 @@
 %   \item[05-page-of-total] a ``Page X of Y'' footer with \textsf{fancyhdr}
 %     and |\lastpage|.
 %   \item[06-custom-slot-width] widening the slot templates.
+%   \item[07-citations] single-run numbered |\cite| with a hand-written
+%     |thebibliography|: forward, repeated and multi-key citations.
 % \end{description}
 %
 % \StopEventually{}
@@ -196,12 +240,17 @@
 % \changes{v1.3}{2026/07/07}{Renamed to \textsf{monoref}; support
 %   \textsf{amsmath} numbered-equation labels; patch slots on the
 %   contents page; broad set of examples}
+% \changes{v1.4}{2026/07/31}{Single-run numbered citations:
+%   \cs{bibitem} registers its label, \cs{cite} resolves through the
+%   slot machinery; new \cs{monorefcitetemplate} and \texttt{nobib}
+%   option; \cs{cite} is left untouched when \textsf{natbib},
+%   \textsf{cite} or \textsf{biblatex} is loaded}
 %
 %    \begin{macrocode}
 %<*package>
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{monoref}%
-  [2026/07/07 v1.3 Single-pass cross-references, page totals and TOC (LuaLaTeX)]
+  [2026/07/31 v1.4-dev Single-pass cross-references, page totals, TOC and citations (LuaLaTeX)]
 
 \RequirePackage{iftex}
 \RequireLuaTeX
@@ -209,6 +258,8 @@
 
 \newif\ifmonoref@dotoc \monoref@dotoctrue
 \DeclareOption{notoc}{\monoref@dotocfalse}
+\newif\ifmonoref@dobib \monoref@dobibtrue
+\DeclareOption{nobib}{\monoref@dobibfalse}
 \ProcessOptions\relax
 
 \directlua{if not pcall(require, "monoref") then
@@ -221,6 +272,7 @@
 
 \newcommand\monorefreftemplate{0.0.0}
 \newcommand\monorefpagetemplate{000}
+\newcommand\monorefcitetemplate{00}
 \newlength\monorefslotwidth \setlength\monorefslotwidth{0pt}
 \newlength\monoref@tmpwd
 
@@ -245,6 +297,29 @@
   \else
     \monoref@slot{\directlua{monoref.newslot("#1","ref")}}{\monorefreftemplate}%
   \fi}
+
+\newcommand\monoref@biblabel[2]{%   #1 = cite key   #2 = printed label value
+  \protected@edef\monoref@cl{#2}%
+  \monoref@mark{\directlua{monoref.label_begin("mbib:\luaescapestring{#1}",
+     "\luaescapestring{\monoref@cl}")}}%
+  \monoref@target{lbl:mbib:#1}}
+
+\newcommand\monoref@citeinner[1]{%
+  \ifnum\directlua{monoref.known("mbib:\luaescapestring{#1}")}>\z@
+    \directlua{monoref.ref_value("mbib:\luaescapestring{#1}")}%
+  \else
+    \monoref@slot{\directlua{monoref.newslot("mbib:\luaescapestring{#1}","ref")}}%
+      {\monorefcitetemplate}%
+  \fi}
+
+\newcommand\monoref@citelist[1]{%   keys in source order, kernel separator
+  \let\monoref@sep\@empty
+  \@for\monoref@cb:=#1\do{%
+    \edef\monoref@cb{\expandafter\@firstofone\monoref@cb\@empty}%
+    \if@filesw\immediate\write\@auxout{\string\citation{\monoref@cb}}\fi
+    \monoref@sep
+    \monoref@link{lbl:mbib:\monoref@cb}{\monoref@citeinner{\monoref@cb}}%
+    \def\monoref@sep{,\penalty\@m\ }}}
 
 \newcommand\monoref@record[3]{%   #1 level  #2 number  #3 title
   \protected@edef\monoref@nm{#2}%
@@ -283,6 +358,25 @@
      {\IfValueTF{##2}{\monoref@origsubsubsection[##2]{##3}}{\monoref@origsubsubsection{##3}}%
       \monoref@record{3}{\thesubsubsection}{##3}}}%
   \@ifpackageloaded{amsmath}{\let\ltx@label\label}{}%
+  \ifmonoref@dobib
+    \@ifpackageloaded{natbib}{\monoref@dobibfalse}{}%
+    \@ifpackageloaded{cite}{\monoref@dobibfalse}{}%
+    \@ifpackageloaded{biblatex}{\monoref@dobibfalse}{}%
+  \fi
+  \ifmonoref@dobib
+    \let\monoref@origbibitem\bibitem
+    \def\bibitem{\@ifnextchar[\monoref@lbibitem\monoref@bibitem}%]
+    \def\monoref@lbibitem[##1]##2{%
+      \monoref@origbibitem[##1]{##2}\monoref@biblabel{##2}{##1}}%
+    \def\monoref@bibitem##1{%
+      \monoref@origbibitem{##1}\monoref@biblabel{##1}{\@currentlabel}}%
+    \RenewDocumentCommand\cite{o m}{%
+      \IfValueTF{##1}{\@tempswatrue}{\@tempswafalse}%
+      \@cite{\monoref@citelist{##2}}{\IfValueTF{##1}{##1}{}}}%
+  \else
+    \PackageInfo{monoref}{Citation support off
+      (nobib option, or natbib/cite/biblatex detected)}%
+  \fi
 }
 \AtBeginDocument{\monoref@activate}
 
