@@ -1,0 +1,34 @@
+% Proof of concept: single-run numbered citations through monoref's
+% existing slot machinery (not yet a supported package feature).
+%
+% \bibitem sets \@currentlabel to the citation number, so a monoref
+% \label planted by \bibitem records exactly the value \cite needs;
+% \cite then becomes an ordinary forward reference slot, patched at
+% flush time.  Works for single-key \cite with a hand-written
+% thebibliography.  Multi-key and compressed citation lists are the
+% open problem: their width is unknown at paragraph-breaking time.
+%
+% Compile ONCE:  lualatex bib-poc.tex
+\documentclass{article}
+\usepackage{monoref}
+
+\makeatletter
+\let\monorefbib@origbibitem\bibitem
+\def\bibitem#1{\monorefbib@origbibitem{#1}\label{bib:#1}}
+\renewcommand\cite[1]{[\monoref@refinner{bib:#1}]}
+\makeatother
+
+\begin{document}
+
+\section{Text}\label{sec:text}
+Forward citations before the bibliography exists: first~\cite{knuth},
+then~\cite{lamport}, then~\cite{luatex}.  A repeat of the middle
+one~\cite{lamport}.  Page of bibliography: \pageref{bib:knuth}.
+
+\begin{thebibliography}{9}
+\bibitem{knuth} D. Knuth, \emph{The \TeX book}, 1986.
+\bibitem{lamport} L. Lamport, \emph{\LaTeX: A Document Preparation System}, 1994.
+\bibitem{luatex} LuaTeX development team, \emph{LuaTeX reference manual}, 2024.
+\end{thebibliography}
+
+\end{document}
