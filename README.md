@@ -82,7 +82,7 @@ lualatex monoref.dtx
 ```latex
 \documentclass{article}
 \usepackage{hyperref}             % optional: clickable links
-\usepackage{monoref}      % load AFTER hyperref; [notoc] disables the TOC
+\usepackage{monoref}      % either load order works; [notoc] disables the TOC
 \begin{document}
 
 \section{Introduction}\label{sec:intro}
@@ -117,7 +117,8 @@ lualatex yourfile.tex
   original line break.
 - Setting the length `\monorefslotwidth` to a positive value overrides both
   templates with one fixed width.
-- Load **monoref after hyperref** to get clickable links.
+- Load order of **monoref** and **hyperref** does not matter (since v1.4);
+  loading hyperref at all is what enables clickable links.
 
 ## Limitations
 

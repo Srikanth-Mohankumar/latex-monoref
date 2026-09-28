@@ -149,7 +149,7 @@
       (nobib option, or natbib/cite/biblatex detected)}%
   \fi
 }
-\AtBeginDocument{\monoref@activate}
+\AddToHook{begindocument/end}[monoref]{\monoref@activate}
 
 \newcommand\monoref@indent[1]{\ifcase#1\or\or\hspace{1.5em}\or\hspace{3em}\fi}
 \newcommand\monoref@tocline[5]{%   #1 idx  #2 level  #3 number  #4 title  #5 page

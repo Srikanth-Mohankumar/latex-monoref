@@ -91,7 +91,7 @@
 % \begin{verbatim}
 %   \documentclass{article}
 %   \usepackage{hyperref}        % optional; enables clickable links
-%   \usepackage{monoref} % load AFTER hyperref
+%   \usepackage{monoref} % either load order works (v1.4)
 %   \begin{document}
 %   \section{Introduction}\label{sec:intro}
 %   See Section~\ref{sec:results} on page~\pageref{sec:results}.
@@ -176,8 +176,11 @@
 % entries become clickable.  The links use the package's own named
 % destinations (derived directly from the label names), \emph{not}
 % \textsf{hyperref}'s \texttt{.aux}-based anchors, so linking stays
-% single-pass and works for forward references too.  Load
-% \textsf{monoref} \emph{after} \textsf{hyperref}.
+% single-pass and works for forward references too.  Since v1.4 the
+% load order of \textsf{monoref} and \textsf{hyperref} does not
+% matter: the package takes over the reference commands in the
+% \texttt{begindocument/end} hook, after every package's
+% begin-document code has run.
 %
 % \section{The table of contents}
 %
@@ -378,7 +381,7 @@
       (nobib option, or natbib/cite/biblatex detected)}%
   \fi
 }
-\AtBeginDocument{\monoref@activate}
+\AddToHook{begindocument/end}[monoref]{\monoref@activate}
 
 \newcommand\monoref@indent[1]{\ifcase#1\or\or\hspace{1.5em}\or\hspace{3em}\fi}
 \newcommand\monoref@tocline[5]{%   #1 idx  #2 level  #3 number  #4 title  #5 page
