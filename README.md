@@ -138,7 +138,9 @@ a real document.
   **natbib**/**cite**/**biblatex** interfaces (when one of those is
   loaded, `\cite` is left to it and needs reruns as usual).  Generating
   a fresh `.bbl` still requires running BibTeX.
-- A forward value wider than its slot template overflows.
+- A forward value wider than its slot template overflows the line; a
+  warning names the slot and the template to widen (values narrower than
+  the slot are harmless: the line re-justifies).
 - Because it intercepts every `\shipout`, it is incompatible with other
   packages that manipulate shipout.
 
