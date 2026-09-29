@@ -126,13 +126,41 @@ local function value_of(rec)
   return L.ref
 end
 
+-- A replacement wider than its reserved slot cannot be absorbed by the
+-- line's glue: warn, naming the slot and the template to widen.
+local function warn_overflow(rec, val, over, where)
+  local what, tmpl
+  if rec.kind == "total" then
+    what, tmpl = "\\lastpage", "\\monorefpagetemplate"
+  elseif rec.kind == "page" then
+    what, tmpl = "\\pageref{" .. rec.name .. "}", "\\monorefpagetemplate"
+  elseif rec.name:sub(1, 5) == "mbib:" then
+    what, tmpl = "\\cite{" .. rec.name:sub(6) .. "}", "\\monorefcitetemplate"
+  else
+    what, tmpl = "\\ref{" .. rec.name .. "}", "\\monorefreftemplate"
+  end
+  texio.write_nl("term and log", string.format(
+    "Package monoref Warning: replacement '%s' for %s is %.1fpt wider",
+    val, what, over / 65536))
+  texio.write_nl("term and log", string.format(
+    "(monoref)                than its reserved slot on %s; the line", where))
+  texio.write_nl("term and log",
+    "(monoref)                may be overfull.  Widen " .. tmpl ..
+    " (or set \\monorefslotwidth).")
+  texio.write_nl("term and log", "")
+end
+
 -- Fill one placeholder hbox to the value's NATURAL width (the enclosing
 -- line is re-justified afterwards so the reserved slack disappears).
-local function fill_slot(hbox, id)
+local function fill_slot(hbox, id, where)
   local val = value_of(monoref.slots[id])
+  local reserved = hbox.width
   if hbox.head then node.flush_list(hbox.head); hbox.head = nil end
   local gf = glyphs_of(val, monoref.slots[id].font)
   local packed = node.hpack(gf or node.new(GLUE))
+  if packed.width > reserved + 1000 then   -- ~0.015pt tolerance
+    warn_overflow(monoref.slots[id], val, packed.width - reserved, where)
+  end
   hbox.head       = packed.head
   hbox.width      = packed.width
   hbox.height     = packed.height
@@ -159,7 +187,7 @@ local function rejustify(hbox)
 end
 
 -- Patch every slot in a box; re-justify each line that contained one.
-local function patch_box(box)
+local function patch_box(box, where)
   local direct = false
   local n = box.head
   while n do
@@ -167,10 +195,10 @@ local function patch_box(box)
     if id == HLIST or id == VLIST then
       local a = node.get_attribute(n, monoref.slotattr)
       if a and monoref.slots[a] then
-        fill_slot(n, a)
+        fill_slot(n, a, where)
         direct = true
       else
-        patch_box(n)
+        patch_box(n, where)
       end
     end
     n = n.next
@@ -183,8 +211,12 @@ end
 --------------------------------------------------------------------------
 function monoref.finalize()
   monoref.total = #monoref.held
-  for i = 1, #monoref.toc_pages do patch_box(monoref.toc_pages[i]) end
-  for i = 1, #monoref.held      do patch_box(monoref.held[i])      end
+  for i = 1, #monoref.toc_pages do
+    patch_box(monoref.toc_pages[i], "contents page " .. i)
+  end
+  for i = 1, #monoref.held do
+    patch_box(monoref.held[i], "body page " .. i)
+  end
   monoref.queue = {}
   for i = 1, #monoref.toc_pages do monoref.queue[#monoref.queue + 1] = monoref.toc_pages[i] end
   for i = 1, #monoref.held      do monoref.queue[#monoref.queue + 1] = monoref.held[i]      end

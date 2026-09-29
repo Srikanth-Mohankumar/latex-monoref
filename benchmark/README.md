@@ -60,12 +60,14 @@ as a rigorous study.
 
 ## Bibliography proof of concept
 
-`bib-poc.tex` shows single-run numbered citations riding on monoref's
-existing slot machinery: `\bibitem` plants a monoref label (it sets
+`bib-poc.tex` was the proof of concept that led to the citation support
+released in monoref v1.4: `\bibitem` plants a monoref label (it sets
 `\@currentlabel` to the citation number), and `\cite` becomes an ordinary
-forward-reference slot. Forward citations, repeats, and `\pageref` into a
-hand-written `thebibliography` all resolve in one `lualatex` run.
+forward-reference slot. Since v1.4 this is a package feature — see
+`examples/07-citations.tex` — covering multi-key lists in source order,
+the optional note, and the `[label]` `\bibitem` form, with a guard that
+leaves `\cite` alone under natbib/cite/biblatex.
 
-Not yet a package feature: multi-key and compressed citation lists
-(`[3, 7–9]`) have unpredictable width, which the frozen-line-break slot
-model cannot reserve for. Single-key citations fit the model exactly.
+Still open: sorted and compressed citation lists (`[3, 7–9]`) have
+unpredictable width, which the frozen-line-break slot model cannot
+reserve for.
