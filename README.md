@@ -4,7 +4,7 @@ Single-pass cross-references, page totals and a table of contents in **one
 LuaLaTeX run** — no rerun, no `latexmk`, no `.aux` round-trip.
 
 - **Author / maintainer:** Srikanth Mohankumar <srikanthmohankumar@gmail.com>
-- **Version:** 1.4-dev (2026/07/31, development — latest release is 1.3)
+- **Version:** 1.4 (2026/09/29)
 - **License:** LaTeX Project Public License (LPPL) 1.3c or later
 - **Requires:** LuaLaTeX (the package stops with an error on other engines)
 - **Status:** experimental
