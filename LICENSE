@@ -19,7 +19,7 @@ The Current Maintainer of this work is Srikanth Mohankumar.
 This work consists of the files
     monoref.dtx
     monoref.ins
-and the derived files
+    monoref.lua   (standalone Lua source, not generated)
+and the derived file
     monoref.sty
-    monoref.lua
 together with the documentation and README.md.
